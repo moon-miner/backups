@@ -3664,14 +3664,31 @@ main() {
             read -r input
             echo
 
-            if is_file "$input"; then
-                input=$(read_words_from_file "$input")
+            # Check if input looks like a file path and handle accordingly
+            if [[ "$input" == *.* ]] || [[ -f "$input" ]]; then
+                # Input looks like a file or is an existing file
+                if [[ -f "$input" ]]; then
+                    # File exists, read it
+                    input=$(read_words_from_file "$input")
+                else
+                    # Input looks like a file but doesn't exist
+                    echo "" >&2
+                    echo "Error: File '$input' not found" >&2
+                    echo "" >&2
+                    read -p "Press enter to try again..."
+                    echo ""
+                    continue
+                fi
             fi
         else
             read -r input
+            # Silent mode: only check if file actually exists
+            if [[ -f "$input" ]]; then
+                input=$(read_words_from_file "$input")
+            fi
         fi
 
-        # Validate input format
+        # Validate input format AFTER file processing
         if ! validate_input "$input"; then
             echo "" >&2
             read -p "Press enter to clear screen and try again..."
