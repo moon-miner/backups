@@ -1,0 +1,180 @@
+[package]
+name = "scypher-cli"
+version = "3.0.0"
+edition = "2021"
+authors = ["SCypher Team"]
+description = "SCypher CLI - Hybrid implementation combining beautiful interface with robust crypto logic"
+license = "MIT"
+repository = "https://github.com/your-org/scypher-cli"
+keywords = ["crypto", "bip39", "blockchain", "cli", "encryption"]
+categories = ["cryptography", "command-line-utilities"]
+
+[dependencies]
+# CLI Framework
+clap = { version = "4.4.8", features = ["derive", "color"] }
+console = "0.15"
+dialoguer = "0.11"
+
+# System and Security
+rpassword = "7.0"  # REQUERIDO - no opcional
+libc = "0.2"
+ctrlc = "3.0"
+
+# Cryptographic Core (manteniendo versiones exactas del proyecto original)
+sha2 = "0.10"
+argon2 = "0.5"
+zeroize = { version = "1.6.0", features = ["derive"] }  # CRÍTICO - mantener versión exacta
+rand = "0.8"
+rand_chacha = "0.3.1"
+
+# BIP39 and HD Wallet (manteniendo compatibilidad exacta)
+bip39-crate = { package = "bip39", version = "2.0" }  # usando el mismo alias que el proyecto original
+bip32 = "0.5"
+bitcoin = "0.30"  # manteniendo versión del proyecto original
+secp256k1 = { version = "0.27", features = ["recovery", "rand-std"] }  # manteniendo versión exacta
+
+# Ethereum and EVM chains
+ethereum-types = "0.14"
+tiny-keccak = { version = "2.0", features = ["keccak"] }
+k256 = { version = "0.13", features = ["ecdsa"] }
+elliptic-curve = "0.13"
+
+# Additional crypto primitives necesarios
+ripemd = "0.1"
+hmac = "0.12"
+pbkdf2 = "0.12"
+
+# Encoding
+hex = "0.4"
+bs58 = "0.5"
+bech32 = "0.9"
+base32 = "0.4"
+
+# Blockchain specific (agregando las que pueden ser necesarias)
+blake2 = "0.10"
+crc32fast = "1.3"
+ed25519-dalek = "2.0"
+ed25519-bip32 = "0.4"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde", "clock"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Async runtime (opcional para futuras características)
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"], optional = true }
+
+# =============================================================================
+# DEPENDENCIAS CRÍTICAS PARA ADDRESSES (AGREGADAS)
+# =============================================================================
+
+# ERGO - MANTENER VERSIÓN EXACTA QUE FUNCIONA
+ergo-lib = { version = "0.24", features = ["mnemonic_gen"] }
+
+# CARDANO OFICIAL - MANTENER VERSIÓN EXACTA QUE FUNCIONA
+cardano-serialization-lib = { git = "https://github.com/Emurgo/cardano-serialization-lib", tag = "12.0.0" }
+
+# Development dependencies
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.4"
+
+# =============================================================================
+# B6: FEATURE FLAGS PARA CONDITIONAL COMPILATION
+# =============================================================================
+
+[features]
+# Feature por defecto (PRODUCTION MODE - sin logging técnico)
+default = []
+
+# Feature para desarrollo y debugging (incluye logging técnico)
+dev-logging = []
+
+# Features existentes
+security-testing = []
+async = ["tokio"]
+
+# =============================================================================
+# OPTIMIZATION PROFILES
+# =============================================================================
+
+# Release optimization (PRODUCTION BUILD)
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Development profile
+[profile.dev]
+opt-level = 0
+debug = true
+overflow-checks = true
+
+# =============================================================================
+# BINARY CONFIGURATION
+# =============================================================================
+
+[[bin]]
+name = "scypher-cli"
+path = "src/main.rs"
+
+# =============================================================================
+# COMANDOS DE COMPILACIÓN Y TESTING (NOTAS IMPORTANTES)
+# =============================================================================
+#
+# 📋 COMANDOS PRINCIPALES:
+#
+# 🏭 PRODUCTION BUILD (sin logging técnico - RECOMENDADO):
+#   cargo build --release
+#   cargo install --path . --force
+#
+# 🔧 DEVELOPMENT BUILD (con logging técnico completo):
+#   cargo build --release --features dev-logging
+#   cargo install --path . --force --features dev-logging
+#
+# 🧪 TESTING:
+#   cargo test                              # Tests básicos
+#   cargo test --features dev-logging       # Tests con logging
+#   cargo test --all-features              # Tests completos
+#   cargo test -- --nocapture              # Tests con output
+#
+# 📦 BINARIOS FINALES:
+#   ./target/release/scypher-cli            # Production (limpio)
+#   ./target/release/scypher-cli --help     # Ver opciones
+#
+# 🔍 VERIFICACIÓN:
+#   cargo check                             # Verificar compilación
+#   cargo clippy                            # Linting
+#   cargo fmt                               # Formateo
+#
+# 🧮 TESTING ESPECÍFICO POR ETAPA:
+#   cargo test b6_tests                     # Tests B6 específicos
+#   cargo test etapa_b6                     # Tests etapa completa
+#   cargo test conditional_compilation      # Tests feature flags
+#
+# 📊 ANÁLISIS DE BINARIO:
+#   ls -lh target/release/scypher-cli       # Tamaño del binario
+#   file target/release/scypher-cli         # Información del binario
+#
+# 🎯 TESTING JSON API (PRODUCTION):
+#   echo '{"command":"derive","params":{"phrase":"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about","networks":["bitcoin"]}}' | ./target/release/scypher-cli --silent --format json
+#
+# 🎯 TESTING JSON API (DEVELOPMENT):
+#   echo '{"command":"derive","params":{"phrase":"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about","networks":["bitcoin"]}}' | ./target/release/scypher-cli --silent --format json
+#   # (debe mostrar logs adicionales si se compiló con --features dev-logging)
+#
+# ⚠️  IMPORTANTE:
+#   - El build por defecto es PRODUCTION (sin logging técnico)
+#   - Para debugging usar --features dev-logging
+#   - Para Electron siempre usar build por defecto (production)
+#   - Los tests siempre incluyen logging para debugging
+#
+# =============================================================================
